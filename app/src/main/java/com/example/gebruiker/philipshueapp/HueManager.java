@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HueManager {
-    private ArrayList<Light> lights = new ArrayList<>();
 
     private static HueManager instance = null;
 
@@ -58,6 +57,7 @@ public class HueManager {
                     public void onResponse(JSONObject response) {
                         // Process the JSON
                         try {
+                            ArrayList<Light> lights = new ArrayList<>();
                             // Loop through the array elements
                             for (int i = 1; i <= response.length(); i++) {
                                 // Get current json object
@@ -93,7 +93,7 @@ public class HueManager {
         queue.add(jsonObjectRequest);
     }
 
-    public void volleyPut(String url, final String body) {
+    public void volleyPut(String url, final HashMap<String, String> params) {
         StringRequest putRequest = new StringRequest(Request.Method.PUT, url,
                 new Response.Listener<String>()
                 {
@@ -115,12 +115,7 @@ public class HueManager {
 
             @Override
             public byte[] getBody() throws AuthFailureError {
-                try {
-                    return body.getBytes("utf-8");
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                    return null;
-                }
+                return new JSONObject(params).toString().getBytes();
             }
 
             @Override
@@ -134,23 +129,27 @@ public class HueManager {
     }
 
     public void switchOn(String url, boolean on) {
-        String body = "{\""+  Config.ON + "\":" + on + "}";
-        this.volleyPut(url, body);
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put(Config.ON, String.valueOf(on));
+        this.volleyPut(url, params);
     }
 
     public void putHue(String url, int hue) {
-        String body = "{\""+  Config.HUE + "\":" + hue + "}";
-        this.volleyPut(url, body);
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put(Config.HUE, String.valueOf(hue));
+        this.volleyPut(url, params);
     }
 
     public void putSaturation(String url, int saturation) {
-        String body = "{\""+  Config.SATURATION + "\":" + saturation + "}";
-        this.volleyPut(url, body);
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put(Config.SATURATION, String.valueOf(saturation));
+        this.volleyPut(url, params);
     }
 
     public void putBrightness(String url, int brightness) {
-        String body = "{\""+  Config.BRIGHTNESS + "\":" + brightness + "}";
-        this.volleyPut(url, body);
+        HashMap<String, String> params = new HashMap<String, String>();
+        params.put(Config.BRIGHTNESS, String.valueOf(brightness));
+        this.volleyPut(url, params);
     }
 
 }

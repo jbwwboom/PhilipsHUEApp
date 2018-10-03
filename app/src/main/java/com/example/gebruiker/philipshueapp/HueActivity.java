@@ -104,6 +104,5 @@ public class HueActivity extends AppCompatActivity {
                 manager.putBrightness(url, seekBar.getProgress());
             }
         });
-
     }
 }

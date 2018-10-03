@@ -15,6 +15,7 @@ public class MainActivity extends AppCompatActivity implements HueListener {
     private RecyclerView recyclerView;
     private HueAdapter adapter;
     private ArrayList<Light> lights = new ArrayList<>();
+    private HueManager manager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,8 +23,7 @@ public class MainActivity extends AppCompatActivity implements HueListener {
         setContentView(R.layout.activity_main);
 
         //HueManager manager
-        final HueManager manager = HueManager.getInstance(this, this);
-        manager.volleyGet();
+        manager = HueManager.getInstance(this, this);
 
         recyclerView = findViewById(R.id.hueListView);
         recyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -44,14 +44,25 @@ public class MainActivity extends AppCompatActivity implements HueListener {
                     }
                 })
         );
+
+        adapter = new HueAdapter(this.lights);
+        recyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void onResume(){
+        super.onResume();
+        manager.volleyGet();
     }
 
     @Override
     public void onResponse(ArrayList<Light> lights) {
-        this.lights = lights;
+        this.lights.clear();
         Log.d("Response: ", lights.size() + "");
-        adapter = new HueAdapter(this.lights);
-        recyclerView.setAdapter(adapter);
+
+
+        this.lights.addAll(lights);
+        adapter.notifyDataSetChanged();
     }
 
     @Override
