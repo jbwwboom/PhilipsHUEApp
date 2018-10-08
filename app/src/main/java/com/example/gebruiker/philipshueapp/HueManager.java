@@ -1,6 +1,7 @@
 package com.example.gebruiker.philipshueapp;
 
 import android.content.Context;
+import android.content.Intent;
 import android.util.Log;
 
 import com.android.volley.AuthFailureError;
@@ -12,12 +13,16 @@ import com.android.volley.toolbox.JsonObjectRequest;
 import com.android.volley.toolbox.StringRequest;
 import com.android.volley.toolbox.Volley;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 import org.json.JSONStringer;
 
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 
 public class HueManager {
@@ -58,10 +63,14 @@ public class HueManager {
                         // Process the JSON
                         try {
                             ArrayList<Light> lights = new ArrayList<>();
-                            // Loop through the array elements
-                            for (int i = 1; i <= response.length(); i++) {
+
+                            //NEW PARSES
+                            Map<String, Object> test = jsonToMap(response);
+                            for(String i : test.keySet()){
+                            //OLD PARSER
+                            //for (int i = 1; i <= response.length(); i++) {
                                 // Get current json object
-                                JSONObject jsonLight = response.getJSONObject("" + i);
+                                JSONObject jsonLight = response.getJSONObject(i);
 
                                 String modelid = jsonLight.getString(Config.MODELID);
                                 String name = jsonLight.getString(Config.NAME);
@@ -71,7 +80,7 @@ public class HueManager {
                                 int sat = state.getInt(Config.SATURATION);
                                 int bri = state.getInt(Config.BRIGHTNESS);
 
-                                Light light = new Light(i, modelid, name, on, hue, sat, bri);
+                                Light light = new Light(Integer.valueOf(i), modelid, name, on, hue, sat, bri);
                                 lights.add(light);
                             }
                             listener.onResponse(lights);
@@ -93,7 +102,7 @@ public class HueManager {
         queue.add(jsonObjectRequest);
     }
 
-    public void volleyPut(String url, final HashMap<String, String> params) {
+    public void volleyPut(String url, final HashMap<String, Object> params) {
         StringRequest putRequest = new StringRequest(Request.Method.PUT, url,
                 new Response.Listener<String>()
                 {
@@ -129,27 +138,71 @@ public class HueManager {
     }
 
     public void switchOn(String url, boolean on) {
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put(Config.ON, String.valueOf(on));
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put(Config.ON, on);
         this.volleyPut(url, params);
     }
 
     public void putHue(String url, int hue) {
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put(Config.HUE, String.valueOf(hue));
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put(Config.HUE, hue);
         this.volleyPut(url, params);
     }
 
     public void putSaturation(String url, int saturation) {
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put(Config.SATURATION, String.valueOf(saturation));
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put(Config.SATURATION, saturation);
         this.volleyPut(url, params);
     }
 
     public void putBrightness(String url, int brightness) {
-        HashMap<String, String> params = new HashMap<String, String>();
-        params.put(Config.BRIGHTNESS, String.valueOf(brightness));
+        HashMap<String, Object> params = new HashMap<String, Object>();
+        params.put(Config.BRIGHTNESS, brightness);
         this.volleyPut(url, params);
     }
 
+    public static Map<String, Object> jsonToMap(JSONObject json) throws JSONException {
+        Map<String, Object> retMap = new HashMap<String, Object>();
+
+        if(json != JSONObject.NULL) {
+            retMap = toMap(json);
+        }
+        return retMap;
+    }
+
+    public static Map<String, Object> toMap(JSONObject object) throws JSONException {
+        Map<String, Object> map = new HashMap<String, Object>();
+
+        Iterator<String> keysItr = object.keys();
+        while(keysItr.hasNext()) {
+            String key = keysItr.next();
+            Object value = object.get(key);
+
+            if(value instanceof JSONArray) {
+                value = toList((JSONArray) value);
+            }
+
+            else if(value instanceof JSONObject) {
+                value = toMap((JSONObject) value);
+            }
+            map.put(key, value);
+        }
+        return map;
+    }
+
+    public static List<Object> toList(JSONArray array) throws JSONException {
+        List<Object> list = new ArrayList<Object>();
+        for(int i = 0; i < array.length(); i++) {
+            Object value = array.get(i);
+            if(value instanceof JSONArray) {
+                value = toList((JSONArray) value);
+            }
+
+            else if(value instanceof JSONObject) {
+                value = toMap((JSONObject) value);
+            }
+            list.add(value);
+        }
+        return list;
+    }
 }
